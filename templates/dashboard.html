@@ -1,83 +1,30 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
 </head>
+
 <body>
-  <h1>Bem-vindo, {{ nome }}!</h1>
+    <h1>Bem-vindo, {{ nome }}!</h1>
 
-  <button id="startBtn">Iniciar Desenho</button>
-  <button id="saveBtn" style="display:none">Salvar Desenho</button>
-  <video id="video" width="640" height="480" autoplay style="display:none;"></video>
-  <canvas id="canvas" width="640" height="480" style="border:1px solid #ccc;"></canvas>
+    <h2>Suas imagens:</h2>
 
-  <h2>Suas imagens:</h2>
-  {% if imagens %}
+    <form action="/capturar" method="post">
+        <button type="submit">Nova imagem</button>
+    </form>
+
+    {% if imagens %}
     {% for img in imagens %}
-      <img src="data:image/png;base64,{{ img }}" width="200" style="margin:10px;">
+    <img src="data:image/png;base64,{{ img }}" alt="Imagem do paciente" style="width:200px; margin:10px;">
     {% endfor %}
-  {% else %}
+    {% else %}
     <p>Você ainda não possui nenhuma imagem cadastrada.</p>
-  {% endif %}
+    {% endif %}
 
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const startBtn = document.getElementById('startBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    let drawing = false;
 
-    // Inicializa MediaPipe Hands
-    const hands = new Hands({locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-    hands.setOptions({ maxNumHands: 1, minDetectionConfidence: 0.8 });
-    hands.onResults(onHands);
 
-    // Captura de câmera
-    async function initCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-      await video.play();
-      new Camera(video, { onFrame: () => hands.send({image: video}) }).start();
-    }
-
-    function onHands(results) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (results.multiHandLandmarks && results.multiHandLandmarks[0]) {
-        const lm = results.multiHandLandmarks[0];
-        for (let i = 1; i < lm.length; i++) {
-          const x = lm[i].x * canvas.width;
-          const y = lm[i].y * canvas.height;
-          if (i === 1) {  // define ponto inicial do traço
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    startBtn.onclick = async () => {
-      startBtn.style.display = 'none';
-      await initCamera();
-      saveBtn.style.display = 'inline';
-    };
-
-    saveBtn.onclick = async () => {
-      // converte canvas em base64
-      const dataURL = canvas.toDataURL('image/png');
-      const res = await fetch('/upload', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({image: dataURL})
-      });
-      if (res.ok) window.location.reload();
-    };
-  </script>
 </body>
+
 </html>
