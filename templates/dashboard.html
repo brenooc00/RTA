@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <h1>Bem-vindo, {{ nome }}!</h1>
+
+    <h2>Suas imagens:</h2>
+
+    <form action="/capturar" method="post">
+        <button type="submit">Nova imagem</button>
+    </form>
+
+    {% if imagens %}
+    {% for img in imagens %}
+    <img src="data:image/png;base64,{{ img }}" alt="Imagem do paciente" style="width:200px; margin:10px;">
+    {% endfor %}
+    {% else %}
+    <p>Você ainda não possui nenhuma imagem cadastrada.</p>
+    {% endif %}
+
+
+
+</body>
+
+</html>
