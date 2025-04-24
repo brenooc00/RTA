@@ -12,29 +12,66 @@
 <body>
 
     <div class="login-background">
+
         <div class="login-container">
-            <h2>SpinalAlign</h2>
+
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo SpinalAlign" class="login-logo">
+
+
             <form action="/login" method="POST">
                 <div class="input-group">
-                    <span class="icon">👤</span>
+                    <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            fill="currentColor" class="bi bi-people-fill" viewBox="0 0 16 16">
+                            <path
+                                d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5" />
+                        </svg></span>
                     <input type="text" name="cpf" placeholder="CPF" required>
                 </div>
                 <div class="input-group">
-                    <span class="icon">🔒</span>
+                    <span class="icon"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            fill="currentColor" class="bi bi-bag-check-fill" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M10.5 3.5a2.5 2.5 0 0 0-5 0V4h5zm1 0V4H15v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4h3.5v-.5a3.5 3.5 0 1 1 7 0m-.646 5.354a.5.5 0 0 0-.708-.708L7.5 10.793 6.354 9.646a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0z" />
+                        </svg></span>
                     <input type="password" name="senha" placeholder="Senha" required>
                 </div>
+
+                {% if erro %}
+                <p class="erro-msg" id="erro-msg">{{ erro }}</p>
+                {% endif %}
 
                 <button type="submit" class="login-button">LOGIN</button>
 
             </form>
 
             <form action="{{ url_for('redirecionar_LoginCadastro') }}" method="get">
-                <button type="submit" class="login-button">Cadastrar</button>
+                <button type="submit" class="login-button">CADASTRAR</button>
             </form>
 
 
         </div>
     </div>
+
+    <script>
+        // CPF mask
+        const cpfInput = document.querySelector('input[name="cpf"]');
+        cpfInput.addEventListener('input', () => {
+            let value = cpfInput.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            value = value
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            cpfInput.value = value;
+        });
+
+        const erroMsg = document.querySelector('.erro-msg');
+        if (erroMsg) {
+            setTimeout(() => {
+                erroMsg.style.display = 'none';
+            }, 2000);
+        }
+    </script>
 
 
 </body>

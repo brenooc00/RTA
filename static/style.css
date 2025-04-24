@@ -2,7 +2,7 @@ body {
     margin: 0;
     padding: 0;
     height: 100vh;
-    background: radial-gradient(circle at top left, #48b281, #188c56);
+    background: radial-gradient(circle at top left, #fff, #b6b2af);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -18,12 +18,14 @@ body {
 }
 
 .login-container {
-    background-color: rgba(221, 9, 9, 0.05);
+    background-color: #188c56;
+    /* Define o fundo como verde */
     padding: 40px;
     border-radius: 10px;
     width: 320px;
-    box-shadow: 0 0 20px rgba(184, 20, 20, 0.3);
+    box-shadow: 0 0 50px #188c56;
     color: #f1eeee;
+    /* Mantém o texto claro para contraste */
     text-align: center;
 }
 
@@ -53,7 +55,7 @@ body {
 
 .icon {
     font-size: 18px;
-    color: #ccc;
+    color: #188c56;
 }
 
 .options {
@@ -78,4 +80,18 @@ body {
 
 .login-button:hover {
     background: linear-gradient(to right, #fff1eeee, #f1eeee);
+}
+
+.login-logo {
+    max-width: 100%;
+    height: 50%;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+.erro-msg {
+    color: #b6b2aA;
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: center;
 }

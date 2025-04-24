@@ -5,102 +5,136 @@
   <title>Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styledashboard.css') }}">
   <style>
-    /* Estilização simplificada, sem destaque excessivo */
-    .card {
-      padding: 1rem;
-      margin: 1.5rem auto;
-      max-width: 90%;
+    /* Reset e prevenção de overflow horizontal */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow-x: hidden; }
+
+    .card { padding: 1rem; margin: 1.5rem auto; max-width: 90%; }
+    h1, h2, .card h3 { text-align: center; }
+    h2 { margin-bottom: 0.5rem; }
+    .original-group { margin-top: 0.5rem; }
+    .thumbnails { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+    .thumbnail img { max-width: 200px; height: auto; display: block; }
+
+    nav { display: flex; justify-content: center; align-items: center; padding: 0.5rem 1rem; background-color: #188c56; box-sizing: border-box; }
+    nav img { height: 80px; border: none; margin: 0; }
+
+    .info-box {
+      position: absolute; top: 130px; left: 30px;
+      background-color: #188c56; color: white;
+      padding: 12px; border-radius: 5px;
+      font-size: 0.9rem;
     }
-    /* Centraliza títulos e textos */
-    h1, h2, .card h3 {
-      text-align: center;
-    }
-    .card h3 {
-      margin-bottom: 1rem;
-    }
-    /* Layout flexível para miniaturas */
-    .thumbnails {
+
+    .actions {
+      position: absolute;
+      top: 100px;
+      right: 30px;
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.5rem;
+      align-items: center;
     }
-    .thumbnail img {
-      max-width: 200px;
+    /* Tornar botões inline para mesma altura e remover margens automáticas */
+    .actions form,
+    .actions > button {
+      margin: 0;
+    }
+    .actions button,
+    .actions form > button {
+      display: inline-block;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      background-color: #188c56;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .actions button:hover,
+    .actions form > button:hover {
+      background-color: #45a049;
+    }
+
+    /* Aviso de seleção */
+    #compare-notice {
+      display: none;
+      margin-left: 1rem;
+      padding: 8px;
+      background-color: #ffeb3b;
+      color: #333;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    /* Modal geral */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: rgba(0,0,0,0.9);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      display: flex; gap: 2rem;
+    }
+    .modal-content img {
+      width: 50vw;
       height: auto;
-      display: block;
+      border: 5px solid white;
+      border-radius: 5px;
+    }
+    /* Destaque da seleção */
+    .thumbnail.selected img {
+      outline: 4px solid #ffeb3b;
     }
   </style>
 </head>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const images = document.querySelectorAll('.clickable');
-  
-      images.forEach(img => {
-        img.addEventListener('click', () => {
-          // Cria o modal
-          const modal = document.createElement('div');
-          modal.style.position = 'fixed';
-          modal.style.top = 0;
-          modal.style.left = 0;
-          modal.style.width = '100vw';
-          modal.style.height = '100vh';
-          modal.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-          modal.style.display = 'flex';
-          modal.style.justifyContent = 'center';
-          modal.style.alignItems = 'center';
-          modal.style.zIndex = 1000;
-  
-          // Clona a imagem
-          const modalImg = document.createElement('img');
-          modalImg.src = img.src;
-          modalImg.style.maxWidth = '100%';
-          modalImg.style.maxHeight = '100%';
-          modalImg.style.border = '5px solid white';
-          modalImg.style.borderRadius = '5px';
-  
-          modal.appendChild(modalImg);
-  
-          // Ao clicar no modal, ele é fechado
-          modal.addEventListener('click', () => {
-            document.body.removeChild(modal);
-          });
-  
-          document.body.appendChild(modal);
-        });
-      });
-    });
-  </script>  
 <body>
+  <div class="info-box">
+    <div><strong>Informações do usuário</strong></div>
+    <div><strong>CPF:</strong> {{ cpf }}</div>
+    <div><strong>Nascimento:</strong> {{ data_nascimento }}</div>
+  </div>
+  
   <nav>
-    <ul>
-      <li><a href="{{ url_for('index') }}">SpinalAlign</a></li>
-    </ul>
+    <a href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo SpinalAlign">
+    </a>
   </nav>
 
+  <div class="actions">
+    <form action="{{ url_for('capturar') }}" method="post">
+      <button type="submit">Nova captura</button>
+    </form>
+    <form action="{{ url_for('realtime') }}" method="post">
+      <button type="submit">Medição</button>
+    </form>
+    <button id="compare-btn" type="button">Comparar</button>
+    <div id="compare-notice">Selecione duas imagens para comparar</div>
+  </div>
+
   <h1>Bem-vindo, {{ nome }}!</h1>
-  <h2>Suas capturas:</h2>
+  <h2>Histórico de capturas</h2>
 
   {% if imagens %}
-    <!-- Grupo: Imagens Originais -->
     <div class="card original-group">
       <h3>Imagem original</h3>
       <div class="thumbnails">
         {% for img in imagens %}
-          <div class="thumbnail">
+          <div class="thumbnail" data-src="data:image/png;base64,{{ img.real }}">
             <img src="data:image/png;base64,{{ img.real }}" alt="Imagem original" class="clickable">
+            <!-- Timestamp abaixo da imagem -->
+            <div class="timestamp">{{ img.timestamp }}</div>
           </div>
-        {% endfor %}
-      </div>
+        {% endfor %}</div>
     </div>
 
-    <!-- Grupo: Desenhos -->
     <div class="card desenho-group">
       <h3>Desenho</h3>
       <div class="thumbnails">
         {% for img in imagens %}
-          <div class="thumbnail">
+          <div class="thumbnail" data-src="data:image/png;base64,{{ img.desenho }}">
             <img src="data:image/png;base64,{{ img.desenho }}" alt="Desenho" class="clickable">
+            <div class="timestamp">{{ img.timestamp }}</div>
           </div>
         {% endfor %}
       </div>
@@ -109,8 +143,79 @@
     <p style="text-align: center;">Você ainda não possui nenhuma captura.</p>
   {% endif %}
 
-  <form action="{{ url_for('capturar') }}" method="post" style="text-align: center; margin-top: 2rem;">
-    <button type="submit">Nova captura</button>
-  </form>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      const compareBtn = document.getElementById('compare-btn');
+      const notice    = document.getElementById('compare-notice');
+      let compareMode = false;
+      let selected    = [];
+
+      function openModal(src) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.width = '50vw';
+        img.style.height = 'auto';
+        img.style.border = '5px solid white';
+        img.style.borderRadius = '5px';
+        overlay.appendChild(img);
+        overlay.addEventListener('click', () => overlay.remove());
+        document.body.appendChild(overlay);
+      }
+
+      function openCompareModal(img1, img2) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        const content = document.createElement('div');
+        content.className = 'modal-content';
+        [img1, img2].forEach(src => {
+          const el = document.createElement('img');
+          el.src = src;
+          el.style.width = '45vw';
+          el.style.height = 'auto';
+          el.style.border = '5px solid white';
+          el.style.borderRadius = '5px';
+          content.appendChild(el);
+        });
+        overlay.appendChild(content);
+        overlay.addEventListener('click', () => overlay.remove());
+        document.body.appendChild(overlay);
+      }
+
+      thumbnails.forEach(thumb => {
+        thumb.addEventListener('click', () => {
+          const src = thumb.getAttribute('data-src');
+          if (!compareMode) {
+            openModal(src);
+          } else {
+            if (thumb.classList.contains('selected')) {
+              thumb.classList.remove('selected');
+              selected = selected.filter(s => s !== src);
+            } else if (selected.length < 2) {
+              thumb.classList.add('selected');
+              selected.push(src);
+            }
+            if (selected.length === 1) notice.textContent = 'Selecione mais uma imagem';
+            if (selected.length === 2) {
+              openCompareModal(selected[0], selected[1]);
+              thumbnails.forEach(t => t.classList.remove('selected'));
+              selected = [];
+              compareMode = false;
+              notice.style.display = 'none';
+            }
+          }
+        });
+      });
+
+      compareBtn.addEventListener('click', () => {
+        compareMode = true;
+        selected = [];
+        notice.textContent = 'Selecione duas imagens para comparar';
+        notice.style.display = 'block';
+      });
+    });
+  </script>
 </body>
 </html>
