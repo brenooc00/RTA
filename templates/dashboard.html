@@ -1,40 +1,116 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styledashboard.css') }}">
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styledashboard.css') }}">
+  <style>
+    /* Estilização simplificada, sem destaque excessivo */
+    .card {
+      padding: 1rem;
+      margin: 1.5rem auto;
+      max-width: 90%;
+    }
+    /* Centraliza títulos e textos */
+    h1, h2, .card h3 {
+      text-align: center;
+    }
+    .card h3 {
+      margin-bottom: 1rem;
+    }
+    /* Layout flexível para miniaturas */
+    .thumbnails {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .thumbnail img {
+      max-width: 200px;
+      height: auto;
+      display: block;
+    }
+  </style>
 </head>
-
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const images = document.querySelectorAll('.clickable');
+  
+      images.forEach(img => {
+        img.addEventListener('click', () => {
+          // Cria o modal
+          const modal = document.createElement('div');
+          modal.style.position = 'fixed';
+          modal.style.top = 0;
+          modal.style.left = 0;
+          modal.style.width = '100vw';
+          modal.style.height = '100vh';
+          modal.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+          modal.style.display = 'flex';
+          modal.style.justifyContent = 'center';
+          modal.style.alignItems = 'center';
+          modal.style.zIndex = 1000;
+  
+          // Clona a imagem
+          const modalImg = document.createElement('img');
+          modalImg.src = img.src;
+          modalImg.style.maxWidth = '100%';
+          modalImg.style.maxHeight = '100%';
+          modalImg.style.border = '5px solid white';
+          modalImg.style.borderRadius = '5px';
+  
+          modal.appendChild(modalImg);
+  
+          // Ao clicar no modal, ele é fechado
+          modal.addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+  
+          document.body.appendChild(modal);
+        });
+      });
+    });
+  </script>  
 <body>
-    <nav>
-        <ul>
-            <div class="center">
-            </div>
-            <li>
-                <a href="{{ url_for('index') }}">SpinalAlign</a>
-            </li>
-        </ul>
-    </nav>
+  <nav>
+    <ul>
+      <li><a href="{{ url_for('index') }}">SpinalAlign</a></li>
+    </ul>
+  </nav>
 
-    <h1>Bem-vindo, {{ nome }}!</h1>
+  <h1>Bem-vindo, {{ nome }}!</h1>
+  <h2>Suas capturas:</h2>
 
-    <h2>Suas imagens:</h2>
-
-    <!-- Exibir imagens primeiro -->
-    <div class="imagens-container">
-        {% if imagens %}
-            {% for img in imagens %}
-                <img src="data:image/png;base64,{{ img }}" alt="Imagem do paciente">
-            {% endfor %}
-        {% else %}
-            <p>Você ainda não possui nenhuma imagem cadastrada.</p>
-        {% endif %}
+  {% if imagens %}
+    <!-- Grupo: Imagens Originais -->
+    <div class="card original-group">
+      <h3>Imagem original</h3>
+      <div class="thumbnails">
+        {% for img in imagens %}
+          <div class="thumbnail">
+            <img src="data:image/png;base64,{{ img.real }}" alt="Imagem original" class="clickable">
+          </div>
+        {% endfor %}
+      </div>
     </div>
 
-    <!-- Botão após as imagens -->
-    <form action="/capturar" method="post">
-        <button type="submit">Nova imagem</button>
-    </form>
+    <!-- Grupo: Desenhos -->
+    <div class="card desenho-group">
+      <h3>Desenho</h3>
+      <div class="thumbnails">
+        {% for img in imagens %}
+          <div class="thumbnail">
+            <img src="data:image/png;base64,{{ img.desenho }}" alt="Desenho" class="clickable">
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+    <p style="text-align: center;">Você ainda não possui nenhuma captura.</p>
+  {% endif %}
+
+  <form action="{{ url_for('capturar') }}" method="post" style="text-align: center; margin-top: 2rem;">
+    <button type="submit">Nova captura</button>
+  </form>
 </body>
 </html>

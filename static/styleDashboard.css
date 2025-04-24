@@ -1,9 +1,9 @@
 /* Definição de variáveis para cores */
 :root {
     --cor-verde: #188c56; /* Você pode ajustar este tom de verde conforme desejar */
-    --cor-cinza: #707070; /* Cor cinza para o restante do conteúdo */
+    --cor-cinza: #4f4e4e; /* Cor cinza para o restante do conteúdo */
     --cor-fundo: #f4f4f4; /* Cor de fundo da página */
-    --cor-texto-nav: white; /* Cor do texto na barra de navegação */
+    --cor-texto-nav: white; /* Cor do texto na barra de navegação */#707070
   }
   
   /* Estilos para o corpo da página */
@@ -95,4 +95,12 @@
   form {
     text-align: center;
     margin: 20px 0;
+  }
+
+  .clickable {
+    cursor: zoom-in;
+    transition: transform 0.2s;
+  }
+  .clickable:hover {
+    transform: scale(1.03);
   }
