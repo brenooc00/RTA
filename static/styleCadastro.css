@@ -1,0 +1,98 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f1eeee;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    width: 80%;
+    height: 90%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 100px;
+    background-color: #188c56;
+}
+
+.form-container {
+    flex: 1;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.title {
+    text-align: center;
+    color: #188c56;
+    margin-bottom: 20px;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.label {
+    font-size: 14px;
+    color: #188c56;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #68d6a3;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #188c56;
+    box-shadow: 0 0 5px #188c56;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button-cadastrar {
+    background-color: #188c56;
+    color: white;
+}
+
+.button-cadastrar:hover {
+    background-color: #2fa36d;
+}
+
+.button-voltar {
+    background-color: #188c56;
+    color: white;
+}
+
+.button-voltar:hover {
+    background-color: #2fa36d;
+}
