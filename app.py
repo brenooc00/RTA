@@ -102,11 +102,7 @@ def dashboard():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     # Busca o CPF e data de nascimento do paciente
-    cursor.execute("""
-        SELECT cpf, data_nascimento 
-        FROM pacientes 
-        WHERE id = %s
-    """, (paciente_id,))
+    cursor.execute(""" SELECT cpf, data_nascimento FROM pacientes WHERE id = %s """, (paciente_id,))
     paciente_info = cursor.fetchone()
 
     if paciente_info:
@@ -117,7 +113,7 @@ def dashboard():
         data_nascimento = 'Não encontrado'
 
     # Busca todas as imagens relacionadas ao paciente
-    cursor.execute("SELECT imagem, desenho, data FROM imagens WHERE paciente_id = %s", (paciente_id,))
+    cursor.execute("""SELECT id, imagem, desenho, data FROM imagens WHERE paciente_id = %s ORDER BY data ASC""", (paciente_id,))
     imagens_raw = cursor.fetchall()
     conn.close()
 
@@ -126,6 +122,7 @@ def dashboard():
     for row in imagens_raw:
         timestamp = row['data'].strftime("%d/%m/%Y %H:%M:%S")
         imagens.append({
+            'id'       : row['id'],
             'real': base64.b64encode(row['imagem']).decode('utf-8'),
             'desenho': base64.b64encode(row['desenho']).decode('utf-8'),
             'timestamp': timestamp
@@ -169,6 +166,25 @@ def capturar():
 
     return redirect(url_for('dashboard'))
 
+@app.route('/delete/<int:image_id>')
+def delete_image(image_id):
+    paciente_id = session.get('paciente_id')
+    if not paciente_id:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # só deleta se pertencer ao paciente logado
+    cursor.execute(
+        "DELETE FROM imagens WHERE id = %s AND paciente_id = %s",
+        (image_id, paciente_id)
+    )
+    conn.commit()
+    conn.close()
+
+    flash("Imagem excluída com sucesso.")
+    return redirect(url_for('dashboard'))
+
 def imagem_coluna():
     # Inicializar detector do cvzone
     detector = HandDetector(detectionCon=0.7, maxHands=1)
@@ -200,6 +216,7 @@ def imagem_coluna():
     first_hand_detected = False
     frame_final = None  # Para salvar ao final
     captura_finalizada = False  # Para verificar se a captura foi finalizada com sucesso
+    desvios = []  # Lista para armazenar (distance_cm, x, y)
 
     while cap.isOpened():
         success, frame = cap.read()
@@ -209,9 +226,18 @@ def imagem_coluna():
         frame = cv2.flip(frame, 1)
 
         # Aumentar contraste da imagem para facilitar a detecção
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        enhanced = cv2.equalizeHist(gray)
-        frame = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        #enhanced = cv2.equalizeHist(gray)
+        #frame = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+
+        # Configurar CLAHE (Contrast Limited Adaptive Histogram Equalization)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        # Converter para YUV
+        img_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
+        # Aplicar CLAHE apenas no canal Y
+        img_yuv[:,:,0] = clahe.apply(img_yuv[:,:,0])
+        # Converter de volta para BGR
+        frame = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
 
         # Detectar a mão
         hands, frame = detector.findHands(frame, flipType=False, draw=True)
@@ -222,10 +248,6 @@ def imagem_coluna():
             countdown_time = time.time()
 
         if not first_hand_detected:
-
-            #Antigo e simples
-            #if not first_hand_detected:
-                #cv2.putText(frame, "Aguardando mao...", (10, frame.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (55,240,5), 2)
                         
             #Definindo as configurações para o texto
             font = cv2.FONT_HERSHEY_DUPLEX
@@ -238,16 +260,16 @@ def imagem_coluna():
             message = "Aguardando mao..."
 
             # Calcular tamanho do texto
-            (text_width, text_height), _ = cv2.getTextSize(message, font, font_scale, thickness)
+            (text_width, text_height), _ = cv2.getTextSize(message, cv2.FONT_HERSHEY_DUPLEX, 1, 2)
 
             # Coordenadas para centralizar
             x = (frame.shape[1] - text_width) // 2
             y = (frame.shape[0] -20)
 
             # Desenhar fundo (retângulo)
-            cv2.rectangle(frame, (x - 10, y - text_height - 10), (x + text_width + 10, y + 10), bg_color, -1)
+            cv2.rectangle(frame, (x - 10, y - text_height - 10), (x + text_width + 10, y + 10), (70, 70, 70), -1)
             # Escrever texto por cima
-            cv2.putText(frame, message, (x, y), font, font_scale, text_color, thickness)
+            cv2.putText(frame, message, (x, y), cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2)
 
         if countdown_started and not capture_started:
             elapsed_countdown = time.time() - countdown_time
@@ -256,21 +278,20 @@ def imagem_coluna():
                 start_time = time.time()
             else:
                 remaining = countdown_duration - elapsed_countdown
-                #cv2.putText(frame, f"Iniciando em: {int(remaining) + 1}s", (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (124,252,0), 2) #Antigo e simples
                 message = f"Iniciando em: {int(remaining) + 1}s"
                 text_color = (0, 255, 0)
 
-                (text_width, text_height), _ = cv2.getTextSize(message, font, font_scale, thickness)  # Calcular tamanho do texto
+                (text_width, text_height), _ = cv2.getTextSize(message, cv2.FONT_HERSHEY_DUPLEX, 1, 2)  # Calcular tamanho do texto
 
                 # Coordenadas para centralizar na parte inferior
                 x = (frame.shape[1] - text_width) // 2
                 y = frame.shape[0] - 20
 
                 # Desenhar fundo (retângulo)
-                cv2.rectangle(frame, (x - 10, y - text_height - 10), (x + text_width + 10, y + 10), bg_color, -1)
+                cv2.rectangle(frame, (x - 10, y - text_height - 10), (x + text_width + 10, y + 10), (70, 70, 70), -1)
 
                 # Escrever texto
-                cv2.putText(frame, message, (x, y), font, font_scale, text_color, thickness)
+                cv2.putText(frame, message, (x, y), cv2.FONT_HERSHEY_DUPLEX, 1, (75, 230, 210), 2)
 
         if capture_started:
             elapsed_time = time.time() - start_time
@@ -310,11 +331,13 @@ def imagem_coluna():
                 distance_x = abs(prev_x - initial_x)
                 distance_cm = distance_x * px_to_cm
                 
+                desvios.append((distance_cm, prev_x, prev_y))
+
                 text = f"Distancia: {distance_cm:.1f} cm"
                 text_color = (255, 200, 0) 
 
                 # Calcular tamanho do texto
-                (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
+                (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_DUPLEX, 1, 2)
 
                 # Coordenadas para canto superior esquerdo
                 x, y = 10, 30
@@ -323,11 +346,10 @@ def imagem_coluna():
                 cv2.rectangle(frame, (x - 5, y - text_height - 5), (x + text_width + 5, y + 5), bg_color, -1)
 
                 # Escrever texto
-                cv2.putText(frame, text, (x, y),
-                            font, font_scale, text_color, thickness)
+                cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2)
                 
             # Suavizar desenho
-            smooth_canvas = cv2.GaussianBlur(canvas, (9, 9), 0)
+            smooth_canvas = cv2.GaussianBlur(canvas, (11, 11), 0)
             frame = cv2.addWeighted(frame, 0.5, smooth_canvas, 0.5, 0)
 
         cv2.imshow("Desenho com os dedos", frame)
@@ -342,16 +364,75 @@ def imagem_coluna():
     if not captura_finalizada:
         return None  # Retorno se o usuário fechou antes do fim
 
-    # Salvar automaticamente
-    time_stamp = time.strftime("%Y%m%d-%H%M%S")
+    # Separar os desvios para cada lado da linha vertical
+    left_desvios  = [(d, x, y) for (d, x, y) in desvios if x < initial_x]
+    right_desvios = [(d, x, y) for (d, x, y) in desvios if x > initial_x]
+
+    # Encontrar o maior desvio em cada lado (se existir)
+    max_left  = max(left_desvios,  key=lambda t: t[0]) if left_desvios  else None
+    max_right = max(right_desvios, key=lambda t: t[0]) if right_desvios else None
 
     final_image = cv2.addWeighted(frame, 0.5, smooth_canvas, 0.5, 0)
+
+    # Desenha os pontos de maior desvio e valores na imagem final
+    for item in (max_left, max_right):
+        if not item: continue
+        dist_cm, x, y = item
+        text = f"{dist_cm:.1f} cm"
+
+        # Calcula largura e altura do texto
+        (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+
+        # Desenha o círculo vermelho
+        cv2.circle(final_image, (x, y), 4, (0, 0, 255), -1, lineType=cv2.LINE_AA)
+
+        if x < initial_x:
+            # ponto à esquerda → texto à esquerda do ponto
+            text_x = x - 10 - text_width
+        else:
+            # ponto à direita → texto à direita do ponto
+            text_x = x + 10
+
+        # y do texto fica um pouco acima do ponto
+        text_y = y - 5
+        if x < initial_x: cv2.putText(final_image, text,  (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        else: cv2.putText(final_image, text,  (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+    desenho = smooth_canvas if smooth_canvas is not None else canvas
+    # Desenha os pontos de maior desvio e valores no desenho final
+    for item in (max_left, max_right):
+        if not item: continue
+        dist_cm, x, y = item
+        text = f"{dist_cm:.1f} cm"
+
+        # Calcula largura e altura do texto
+        (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+
+        # Desenha o círculo vermelho
+        cv2.circle(desenho, (x, y), 4, (0, 0, 255), -1, lineType=cv2.LINE_AA)
+
+        if x < initial_x:
+            # ponto à esquerda → texto à esquerda do ponto
+            text_x = x - 10 - text_width
+        else:
+            # ponto à direita → texto à direita do ponto
+            text_x = x + 10
+
+        # y do texto fica um pouco acima do ponto
+        text_y = y - 5
+        if x < initial_x: cv2.putText(desenho, text,  (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        else: cv2.putText(desenho, text,  (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+        if initial_x is not None:
+            h, _ = desenho.shape[:2]
+            cv2.line(desenho, (initial_x, 0), (initial_x, h), (255, 200, 0), 1, lineType=cv2.LINE_AA)
 
     # Codificar a imagem em PNG para bytes
     _, buffer = cv2.imencode('.png', final_image)
     imagem_bytes = buffer.tobytes()
 
-    desenho = smooth_canvas if smooth_canvas is not None else canvas
+    #desenho = smooth_canvas if smooth_canvas is not None else canvas
+    # Codificar o desenho em PNG para bytes
     _, buf_des = cv2.imencode('.png', desenho)
     desenho_bytes = buf_des.tobytes()
 
@@ -392,9 +473,18 @@ def realtime_coluna():
         frame = cv2.flip(frame, 1)
 
         # Realça contraste
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        enhanced = cv2.equalizeHist(gray)
-        frame = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        #enhanced = cv2.equalizeHist(gray)
+        #frame = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+
+        # Configurar CLAHE (Contrast Limited Adaptive Histogram Equalization)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        # Converter para YUV
+        img_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
+        # Aplicar CLAHE apenas no canal Y
+        img_yuv[:,:,0] = clahe.apply(img_yuv[:,:,0])
+        # Converter de volta para BGR
+        frame = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
 
         hands, frame = detector.findHands(frame, flipType=False, draw=True)
         now = time.time()
@@ -442,9 +532,7 @@ def realtime_coluna():
             dist_cm = dist_px * px_to_cm
 
             # desenha linha vertical de referência
-            cv2.line(frame, (initial_x, 0),
-                     (initial_x, frame.shape[0]),
-                     (255, 0, 255), 2)
+            cv2.line(frame, (initial_x, 0), (initial_x, frame.shape[0]), (255,200,0), 2)
 
             # exibe a distância no canto superior esquerdo
             text = f"Distancia: {dist_cm:.1f} cm"

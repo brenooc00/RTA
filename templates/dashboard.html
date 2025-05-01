@@ -58,7 +58,8 @@
     /* Aviso de seleção */
     #compare-notice {
       display: none;
-      margin-left: 1rem;
+      margin-left: auto;
+      margin-top: 4rem;
       padding: 8px;
       background-color: #ffeb3b;
       color: #333;
@@ -109,31 +110,46 @@
       <button type="submit">Medição</button>
     </form>
     <button id="compare-btn" type="button">Comparar</button>
-    <div id="compare-notice">Selecione duas imagens para comparar</div>
   </div>
 
+  <div class="actions">
+    <div id="compare-notice">Selecione duas imagens para comparar</div>
+  </div>
+  
   <h1>Bem-vindo, {{ nome }}!</h1>
   <h2>Histórico de capturas</h2>
-
+  
   {% if imagens %}
     <div class="card original-group">
       <h3>Imagem original</h3>
       <div class="thumbnails">
         {% for img in imagens %}
-          <div class="thumbnail" data-src="data:image/png;base64,{{ img.real }}">
-            <img src="data:image/png;base64,{{ img.real }}" alt="Imagem original" class="clickable">
-            <!-- Timestamp abaixo da imagem -->
+          <div 
+            class="thumbnail" 
+            data-src="data:image/png;base64,{{ img.real }}" 
+            data-id="{{ img.id }}"
+          >
+            <img src="data:image/png;base64,{{ img.real }}" 
+                alt="Imagem original" 
+                class="clickable">
             <div class="timestamp">{{ img.timestamp }}</div>
           </div>
-        {% endfor %}</div>
+        {% endfor %}
+      </div>
     </div>
 
     <div class="card desenho-group">
       <h3>Desenho</h3>
       <div class="thumbnails">
         {% for img in imagens %}
-          <div class="thumbnail" data-src="data:image/png;base64,{{ img.desenho }}">
-            <img src="data:image/png;base64,{{ img.desenho }}" alt="Desenho" class="clickable">
+          <div 
+            class="thumbnail" 
+            data-src="data:image/png;base64,{{ img.desenho }}" 
+            data-id="{{ img.id }}"
+          >
+            <img src="data:image/png;base64,{{ img.desenho }}" 
+                alt="Desenho" 
+                class="clickable">
             <div class="timestamp">{{ img.timestamp }}</div>
           </div>
         {% endfor %}
@@ -143,6 +159,14 @@
     <p style="text-align: center;">Você ainda não possui nenhuma captura.</p>
   {% endif %}
 
+  <div id="confirm-modal" class="modal-overlay" style="display: none;">
+    <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+      <p>Tem certeza que deseja excluir esta imagem e seu desenho?</p>
+      <button id="confirm-yes" style="margin: 10px; background-color: #d9534f; color: white; border: none; padding: 8px 16px; border-radius: 4px;">Sim</button>
+      <button id="confirm-no" style="margin: 10px; background-color: gray; color: white; border: none; padding: 8px 16px; border-radius: 4px;">Cancelar</button>
+    </div>
+  </div>
+  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const thumbnails = document.querySelectorAll('.thumbnail');
@@ -151,9 +175,22 @@
       let compareMode = false;
       let selected    = [];
 
-      function openModal(src) {
+      function openModal(src, id) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = 0;
+        overlay.style.left = 0;
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.zIndex = 1000;
+
+        // Imagem em tamanho grande
         const img = document.createElement('img');
         img.src = src;
         img.style.width = '50vw';
@@ -161,9 +198,84 @@
         img.style.border = '5px solid white';
         img.style.borderRadius = '5px';
         overlay.appendChild(img);
-        overlay.addEventListener('click', () => overlay.remove());
+
+        // Botão Excluir
+        const btn = document.createElement('button');
+        btn.textContent = 'Excluir';
+        btn.style.marginTop = '20px';
+        btn.style.padding = '8px 16px';
+        btn.style.background = '#d9534f';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '4px';
+        btn.style.cursor = 'pointer';
+
+        btn.addEventListener('click', () => {
+          // Caixa de confirmação centralizada
+          const confirmBox = document.createElement('div');
+          confirmBox.style.position = 'fixed';
+          confirmBox.style.top = '50%';
+          confirmBox.style.left = '50%';
+          confirmBox.style.transform = 'translate(-50%, -50%)';
+          confirmBox.style.background = 'white';
+          confirmBox.style.padding = '20px';
+          confirmBox.style.borderRadius = '8px';
+          confirmBox.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+          confirmBox.style.zIndex = 1100;
+          confirmBox.style.textAlign = 'center';
+
+          const text = document.createElement('p');
+          text.textContent = 'Tem certeza que deseja excluir esta imagem e seu desenho?';
+          confirmBox.appendChild(text);
+
+          const yesBtn = document.createElement('button');
+          yesBtn.textContent = 'Sim';
+          yesBtn.style.margin = '10px';
+          yesBtn.style.background = '#d9534f';
+          yesBtn.style.color = 'white';
+          yesBtn.style.border = 'none';
+          yesBtn.style.padding = '8px 16px';
+          yesBtn.style.cursor = 'pointer';
+          yesBtn.style.borderRadius = '4px';
+
+          const noBtn = document.createElement('button');
+          noBtn.textContent = 'Cancelar';
+          noBtn.style.margin = '10px';
+          noBtn.style.background = '#45a049';
+          noBtn.style.border = 'none';
+          noBtn.style.padding = '8px 16px';
+          noBtn.style.cursor = 'pointer';
+          noBtn.style.borderRadius = '4px';
+
+          yesBtn.addEventListener('click', () => {
+            window.location.href = `/delete/${id}`;
+          });
+
+          noBtn.addEventListener('click', () => {
+            confirmBox.remove();
+          });
+
+          const buttonContainer = document.createElement('div');
+          buttonContainer.style.display = 'flex';
+          buttonContainer.style.justifyContent = 'center';
+          buttonContainer.style.marginTop = '15px';
+          buttonContainer.style.gap = '10px'; // espaço entre botões
+
+          buttonContainer.appendChild(yesBtn);
+          buttonContainer.appendChild(noBtn);
+          confirmBox.appendChild(buttonContainer);
+          document.body.appendChild(confirmBox); // adiciona diretamente ao body para garantir centralização
+        });
+
+        overlay.appendChild(btn);
+
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) overlay.remove();
+        });
+
         document.body.appendChild(overlay);
       }
+
 
       function openCompareModal(img1, img2) {
         const overlay = document.createElement('div');
@@ -187,8 +299,9 @@
       thumbnails.forEach(thumb => {
         thumb.addEventListener('click', () => {
           const src = thumb.getAttribute('data-src');
+          const id  = thumb.getAttribute('data-id');
           if (!compareMode) {
-            openModal(src);
+            openModal(src, id);
           } else {
             if (thumb.classList.contains('selected')) {
               thumb.classList.remove('selected');

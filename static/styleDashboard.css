@@ -1,116 +1,128 @@
 /* Definição de variáveis para cores */
 :root {
-    --cor-verde: #188c56; /* Você pode ajustar este tom de verde conforme desejar */
-    --cor-cinza: #4f4e4e; /* Cor cinza para o restante do conteúdo */
-    --cor-fundo: #f4f4f4; /* Cor de fundo da página */
-    --cor-texto-nav: white; /* Cor do texto na barra de navegação */#707070
-  }
-  
-  /* Estilos para o corpo da página */
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: var(--cor-fundo);
-    color: var(--cor-cinza); /* Define o texto padrão como cinza */
-  }
-  
-  /* Estilos para a barra de navegação */
-  nav {
-    background-color: var(--cor-verde); /* Barra de navegação verde */
-    justify-content: center;
-    align-items: center;
-    padding: 15px 0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  nav ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-  }
-  
-  nav li {
-    margin: 0 15px;
-  }
-  
-  nav a {
-    color: var(--cor-texto-nav);
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.2em;
-  }
-  
-  nav a:hover {
-    text-decoration: underline;
-  }
-  
-  /* Estilo para o título de boas-vindas */
-  h1 {
-    color: var(--cor-verde); /* Título "Bem-vindo" verde */
-    text-align: center;
-    margin-top: 30px;
-  }
-  
-  /* Estilos para o título secundário e outros elementos */
-  h2, p {
-    color: var(--cor-cinza); /* Título secundário e parágrafos em cinza */
-    text-align: center;
-  }
-  
-  /* Seção de imagens */
-  .imagens-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin: 10px 0;
-  }
-  
-  img {
-    border: 1px solid var(--cor-cinza);
-    border-radius: 5px;
-    width: 200px;
-    margin: 3px;
-  }
-  
-  /* Estilo para o botão */
-  button {
-    background-color: var(--cor-verde);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    text-align: center;
-    font-size: 16px;
-    margin: 20px auto;
-    display: block;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  
-  button:hover {
-    background-color: #45a049; /* Um verde um pouco mais escuro quando passa o mouse */
-  }
-  
-  /* Centralizando o formulário */
-  form {
-    text-align: center;
-    margin: 20px 0;
-  }
+  --cor-verde: #188c56;
+  /* Você pode ajustar este tom de verde conforme desejar */
+  --cor-cinza: #4f4e4e;
+  /* Cor cinza para o restante do conteúdo */
+  --cor-fundo: #f4f4f4;
+  /* Cor de fundo da página */
+  --cor-texto-nav: white;
+  /* Cor do texto na barra de navegação */
+  #707070
+}
 
-  .clickable {
-    cursor: zoom-in;
-    transition: transform 0.2s;
-  }
-  .clickable:hover {
-    transform: scale(1.03);
-  }
+/* Estilos para o corpo da página */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--cor-fundo);
+  color: var(--cor-cinza);
+  /* Define o texto padrão como cinza */
+}
 
-  .timestamp {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #000000;
-    margin-top: 0.3rem;
-  }
-  
+/* Estilos para a barra de navegação */
+nav {
+  background-color: var(--cor-verde);
+  /* Barra de navegação verde */
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+}
+
+nav li {
+  margin: 0 15px;
+}
+
+nav a {
+  color: var(--cor-texto-nav);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Estilo para o título de boas-vindas */
+h1 {
+  color: var(--cor-verde);
+  /* Título "Bem-vindo" verde */
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Estilos para o título secundário e outros elementos */
+h2,
+p {
+  color: var(--cor-cinza);
+  /* Título secundário e parágrafos em cinza */
+  text-align: center;
+}
+
+/* Seção de imagens */
+.imagens-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+img {
+  border: 1px solid var(--cor-cinza);
+  border-radius: 5px;
+  width: 200px;
+  margin: 3px;
+}
+
+/* Estilo para o botão */
+button {
+  background-color: var(--cor-verde);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 16px;
+  margin: 20px auto;
+  display: block;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #45a049;
+  /* Um verde um pouco mais escuro quando passa o mouse */
+}
+
+/* Centralizando o formulário */
+form {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.clickable {
+  cursor: zoom-in;
+  transition: transform 0.2s;
+}
+
+.clickable:hover {
+  transform: scale(1.03);
+}
+
+.timestamp {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #000000;
+  margin-top: 0.3rem;
+}
+
